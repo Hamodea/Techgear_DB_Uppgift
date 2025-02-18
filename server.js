@@ -4,7 +4,7 @@ const port =  3000;
 
 
 // Hämta Data
-const db = require('./database');
+const db = require('./dataBase');
 
 
 // Skap Medelwear
@@ -28,30 +28,28 @@ app.get('/products', (req, res) => {
     }
 });
 
-app.get('/products/:id', (req, res) => {
-    try {
-        const id = req.params.id;
-        const product = db.getProductById(id);
-        res.json(product);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
+// app.get('/products/:id', (req, res) => {
+//     try {
+//         const id = req.params.id;
+//         const product = db.getProductById(id);
+//         res.json(product);
+//     } catch (error) {
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// });
 
 
-app.get('/products/search', (req, res) => {
+app.get("/products/search", (req, res) => {
+    console.log("Query parameter received:", req.query.name);
     const searchTerm = req.query.name;
 
     if (!searchTerm) {
-        return res.status(400).json({ error: 'Search term is required' });
+        return res.status(400).json({ error: "Sökterm saknas" });
     }
 
-    try {
-        const products = db.getProductsByName(searchTerm);
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    const products = db.getProductsByName(searchTerm);
+    console.log("Products found:", products);
+    res.json(products);
 });
 
 app.listen(port, () => {
