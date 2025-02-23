@@ -3,10 +3,6 @@ const dataBase  = require('better-sqlite3');
 const db = new dataBase('Techgear.db', {verbose: console.log});
 
 
-function getAllCustomer() {
-    return db.prepare("SELECT * FROM customers").all();
-}
-
 
 
 function getAllProducts() {
@@ -48,7 +44,6 @@ function getProductById(productId) {
 }
 
 // get Product By name
-
 function getProductsByName(name) {
     const sql = `
     SELECT 
@@ -86,7 +81,7 @@ function getProductsByCategory(categoryId) {
 
 function createProduct(name, description, price, stock_quantity, manufacturer_id) {
     const stmt = db.prepare(`
-        INSERT INTO Products (name, description, price, stock_quantity, manufacturer_id) 
+        INSERT INTO products (name, description, price, stock_quantity, manufacturer_id) 
         VALUES (?, ?, ?, ?, ?)
     `);
     const result = stmt.run(name, description, price, stock_quantity, manufacturer_id);
@@ -94,7 +89,89 @@ function createProduct(name, description, price, stock_quantity, manufacturer_id
 }
 
 
+function updateProduct(productId, name, description, price, stock_quantity, manufacturer_id) {
+    const stmt = db.prepare(`
+        UPDATE products 
+        SET name = ?, description = ?, price = ?, stock_quantity = ?, manufacturer_id = ? 
+        WHERE product_id = ?
+    `);
+    return stmt.run(name, description, price, stock_quantity, manufacturer_id, productId);
+}
+
+function deleteProduct(productId) {
+    const stmt = db.prepare(`
+        DELETE FROM products 
+        WHERE product_id = ?
+    `);
+    return stmt.run(productId);
+}
 
 
 
-module.exports = {getAllCustomer, getAllProducts, getProductById, getProductsByName, getProductsByCategory, createProduct};
+
+// kund hantering
+
+
+function getAllCustomers() {
+    const sql = db.prepare(`SELECT * FROM customers
+        JOIN orders ON customers.customer_id = orders.customer_id`).all();
+    return sql;
+}
+
+
+// Updatera Kund Information
+
+function updateCustomers(customer_id, email, phone, address) {
+    const stmt =db.prepare(`
+        UPDATE customers
+        SET  email = ?, phone = ?, address = ?
+        WHERE customer_id = ?
+    `);
+    return stmt.run( email, phone, address, customer_id);
+}
+
+// Lista alla ordrar för en specifik kund 
+function getOrdersByCustomerId(customerId) {
+    const stmt = db.prepare(`
+        SELECT *
+        FROM orders
+        WHERE customer_id = ?
+    `);
+    return stmt.all(customerId);
+}
+
+
+// DataAnalysis
+
+//Visa statistik grupperad per kategori 
+
+function getProductStats() {
+    const stmt = db.prepare(`
+        SELECT 
+            c.name AS category_name, 
+            COUNT(p.product_id) AS product_count, 
+            AVG(p.price) AS avg_price
+        FROM products p
+        LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+        LEFT JOIN categories c ON pc.category_id = c.category_id
+        GROUP BY c.category_id;
+    `);
+
+    const results = stmt.all();
+    console.log("DB Query Result:", results); // 🔍 Logga vad som returneras
+    return results;
+}
+
+
+function getreviewStats() {
+    const stmt = db.prepare(`
+        SELECT 
+            product_id, 
+            AVG(rating) AS average_rating, 
+            COUNT(*) AS review_count
+        FROM reviews
+        GROUP BY product_id;
+    `);
+    return stmt.all();
+}
+module.exports = {getAllCustomers, getAllProducts, getProductById, getProductsByName, getProductsByCategory, createProduct, updateProduct, deleteProduct, updateCustomers, getOrdersByCustomerId, getProductStats, getreviewStats};

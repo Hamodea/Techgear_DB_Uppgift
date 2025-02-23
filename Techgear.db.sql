@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS product_categories (
     product_id INTEGER,
     category_id INTEGER,
     PRIMARY KEY (product_id, category_id),
-    FOREIGN KEY (product_id) REFERENCES products(product_id),
-    FOREIGN KEY (category_id) REFERENCES categories(category_id)
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 INSERT INTO product_categories (product_id, category_id) VALUES (1, 1);
 INSERT INTO product_categories (product_id, category_id) VALUES (2, 2);
@@ -89,11 +89,11 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     price REAL NOT NULL,
     stock_quantity INTEGER NOT NULL,
-    FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(manufacturer_id)
+    FOREIGN KEY (manufacturer_id) REFERENCES manufacturers(manufacturer_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 INSERT INTO products (product_id, manufacturer_id, name, description, price, stock_quantity) VALUES (1, 1, 'TechPhone X', 'Flaggskeppssmartphone med AI-kamera.', 999.99, 50);
-INSERT INTO products (product_id, manufacturer_id, name, description, price, stock_quantity) VALUES (2, 2, 'UltraLaptop 15', 'Kraftfull laptop för programmering och spel.', 1499.99, 30);
-INSERT INTO products (product_id, manufacturer_id, name, description, price, stock_quantity) VALUES (3, 3, 'Wireless Earbuds', 'Bluetooth-hörlurar med brusreducering.', 199.99, 100);
+INSERT INTO products (product_id, manufacturer_id, name, description, price, stock_quantity) VALUES (2, 2, 'UltraLaptop 15', 'Kraftfull laptop fï¿½r programmering och spel.', 1499.99, 30);
+INSERT INTO products (product_id, manufacturer_id, name, description, price, stock_quantity) VALUES (3, 3, 'Wireless Earbuds', 'Bluetooth-hï¿½rlurar med brusreducering.', 199.99, 100);
 
 -- Table: reviews
 CREATE TABLE IF NOT EXISTS reviews (
@@ -102,12 +102,13 @@ CREATE TABLE IF NOT EXISTS reviews (
     customer_id INTEGER,
     rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
-    FOREIGN KEY (product_id) REFERENCES products(product_id),
-    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
 INSERT INTO reviews (review_id, product_id, customer_id, rating, comment) VALUES (1, 1, 1, 5, 'Fantastisk telefon, snabb och smidig!');
-INSERT INTO reviews (review_id, product_id, customer_id, rating, comment) VALUES (2, 2, 2, 4, 'Bra laptop, men batteritiden kunde vara bättre.');
-INSERT INTO reviews (review_id, product_id, customer_id, rating, comment) VALUES (3, 3, 3, 5, 'Ljudet är kristallklart och batteriet håller länge.');
+INSERT INTO reviews (review_id, product_id, customer_id, rating, comment) VALUES (2, 2, 2, 4, 'Bra laptop, men batteritiden kunde vara bï¿½ttre.');
+INSERT INTO reviews (review_id, product_id, customer_id, rating, comment) VALUES (3, 3, 3, 5, 'Ljudet ï¿½r kristallklart och batteriet hï¿½ller lï¿½nge.');
 
 -- Table: shipping_methods
 CREATE TABLE IF NOT EXISTS shipping_methods (
