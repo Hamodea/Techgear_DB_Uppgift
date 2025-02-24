@@ -45,7 +45,7 @@ app.get('/products', (req, res) => {
 });
 
 // Hämta en produkt via ID
-app.get('/products/:id', (req, res, next) => {
+app.get('/products/id/:id', (req, res, next) => {
     const productId = req.params.id;
 
     // Om id INTE är ett nummer, gå vidare till nästa route
