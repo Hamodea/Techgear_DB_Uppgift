@@ -18,21 +18,6 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-// 🟢 Viktigt! Lägg `/products/search` FÖRE `/products/:id`
-app.get('/products/search', (req, res) => {
-    const searchTerm = req.query.name;
-
-    if (!searchTerm) {
-        return res.status(400).json({ error: 'Search term is required' });
-    }
-
-    try {
-        const products = db.getProductsByName(searchTerm);
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
 
 // Lista alla produkter
 app.get('/products', (req, res) => {
@@ -48,9 +33,14 @@ app.get('/products', (req, res) => {
 app.get('/products/:id', (req, res, next) => {
     const productId = req.params.id;
 
-    // Om id INTE är ett nummer, gå vidare till nästa route
+    // Om id INTE är ett nummer, gå vidare till næsta route
     if (isNaN(productId)) {
-        return next();
+        next();
+        return;
+    }
+
+    if (productId <= 0) {
+        return res.status(400).json({ error: 'Invalid product ID' });
     }
 
     const product = db.getProductById(productId);
@@ -61,6 +51,23 @@ app.get('/products/:id', (req, res, next) => {
 
     res.json(product);
 });
+
+
+app.get('/products/search', (req, res) => {
+    const searchTerm = req.query.name;
+
+    if (!searchTerm) {
+        return res.status(400).json({ error: 'Search term is required' });
+    }
+
+    try {
+        const products = db.getProductsByName(searchTerm);
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 
 // Hämta en products by category
 app.get('/products/category/:id', (req, res) => {

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS customers (
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (1, 'Alice Johnson', 'alice@example.com', '123456789', '123 Apple St');
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (2, 'Bob Smith', 'bob@example.com', '987654321', '456 Orange Ave');
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (3, 'Charlie Brown', 'charlie@example.com', '555667788', '789 Banana Blvd');
+INSERT INTO customers (customer_id, name, email, phone, address) VALUES (4, 'Eve Adams', 'eve@example.com', '555667788', '789 Banana Blvd');
 
 -- Table: manufacturers
 CREATE TABLE IF NOT EXISTS manufacturers (
