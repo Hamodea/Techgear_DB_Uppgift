@@ -1,5 +1,5 @@
 --
--- File generated with SQLiteStudio v3.4.15 on Mon Feb 24 21:50:31 2025
+-- File generated with SQLiteStudio v3.4.15 on Mon Feb 24 21:54:44 2025
 --
 -- Text encoding used: System
 --
@@ -28,12 +28,8 @@ CREATE TABLE IF NOT EXISTS customers (
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (1, 'Alice Johnson', 'alice@example.com', '123456789', '123 Apple St');
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (2, 'Bob Smith', 'bob@example.com', '987654321', '456 Orange Ave');
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (3, 'Charlie Brown', 'charlie@example.com', '555667788', '789 Banana Blvd');
-<<<<<<< HEAD
-INSERT INTO customers (customer_id, name, email, phone, address) VALUES (4, 'Eve Adams', 'eve@example.com', '555667788', '789 Banana Blvd');
-=======
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (4, 'Erik Svensson', 'erik@svenskmail.se', '0701234567', 'Drottninggatan 10, Stockholm');
 INSERT INTO customers (customer_id, name, email, phone, address) VALUES (5, 'Anna Karlsson', 'anna@karlssonmail.se', '0739876543', 'Avenyn 5, Göteborg');
->>>>>>> df10f3b819e07f92a44778569d17ea11d7803524
 
 -- Table: manufacturers
 CREATE TABLE IF NOT EXISTS manufacturers (

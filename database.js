@@ -1,6 +1,6 @@
 const dataBase  = require('better-sqlite3');
 
-const db = new dataBase('Techgear.db', {verbose: console.log});
+const db = new dataBase('TechDB.db', {verbose: console.log});
 
 
 
