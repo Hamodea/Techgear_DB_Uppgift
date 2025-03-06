@@ -4,6 +4,7 @@ const port =  3000;
 
 // Hämta Data
 const db = require('./database');
+const e = require('express');
 
 // Skap Middleware
 function logger(req, res, next) {
@@ -11,12 +12,19 @@ function logger(req, res, next) {
     next();
 }
 
+function errorHandler(err, req, res, next) {
+    console.error(err.stack);  // Logga felet i konsolen
+
+    res.status(err.status || 500).json({
+        error: err.message || "Internal Server Error"
+    });
+}
+
+
+
 app.use(express.json());
 app.use(logger);    
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
 
 
 // Lista alla produkter
@@ -33,41 +41,35 @@ app.get('/products', (req, res) => {
 app.get('/products/id/:id', (req, res, next) => {
     const productId = req.params.id;
 
-    // Om id INTE är ett nummer, gå vidare till næsta route
     if (isNaN(productId)) {
-        next();
-        return;
-    }
-
-    if (productId <= 0) {
-        return res.status(400).json({ error: 'Invalid product ID' });
+        return next({ status: 400, message: "Invalid product ID" });
     }
 
     const product = db.getProductById(productId);
-
+    
     if (!product) {
-        return res.status(404).json({ error: 'Product not found' });
+        return next({ status: 404, message: "Product not found" });
     }
 
     res.json(product);
 });
 
 
-app.get('/products/search', (req, res) => {
-    const searchTerm = req.query.name;
-
-    if (!searchTerm) {
-        return res.status(400).json({ error: 'Search term is required' });
-    }
-
+//Sök och lista produkter vars namn innehåller söktermen + Extra funktionalitet
+app.get('/products/search', (req, res, next) => {
     try {
-        const products = db.getProductsByName(searchTerm);
+        const products = db.filterProducts(req.query);
+        
+        if (!products.length) {
+            return next({ status: 404, message: 'No products found' });
+        }
+
         res.json(products);
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        console.error("Database error:", error);
+        next(error);
     }
 });
-
 
 // Hämta en products by category
 app.get('/products/category/:id', (req, res) => {
@@ -83,22 +85,46 @@ app.get('/products/category/:id', (req, res) => {
 });
 
 
+// lägga till en produkt
 app.post('/products', (req, res) => {
     const { name, description, price, stock_quantity, manufacturer_id } = req.body;
 
     // Validera att alla nödvändiga fält finns
-    if (!name || !price || !stock_quantity || !manufacturer_id) {
-        return res.status(400).json({ error: 'Missing required fields' });
+    let missingFields = [];
+    if (!name || name.trim() === ''){
+        missingFields.push('name is required');
+    }
+
+    if (!description || description.trim() === ''){
+        missingFields.push('description is required');
+    }
+
+    if (!price || isNaN(price) || price <= 0){
+        missingFields.push('price is required and must be greater than 0');
+    }
+
+    if (!stock_quantity || isNaN(stock_quantity) || stock_quantity <= 0){
+        missingFields.push('stock_quantity is required');
+    }
+
+    if (!manufacturer_id || isNaN(manufacturer_id) || manufacturer_id <= 0){
+        missingFields.push('manufacturer_id is required');
+    }
+
+    if (missingFields.length > 0){
+        return res.status(400).json({ error: missingFields.join(', ') });
     }
 
     try {
-        const newProduct = db.createProduct(name, description, price, stock_quantity, manufacturer_id);
-        res.status(201).json({ message: 'Product created', product: newProduct });
+        const product = db.createProduct(name, description, price, stock_quantity, manufacturer_id);
+        res.json(product);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
 });
 
+
+// uppdatera en produkt
 app.put('/products/:id', (req, res) => {
     const productId = req.params.id;
     const { name, description, price, stock_quantity, manufacturer_id } = req.body;
@@ -111,6 +137,8 @@ app.put('/products/:id', (req, res) => {
     }
 });
 
+
+// ta bort en produkt
 app.delete('/products/:id', (req, res) => {
     const productId = req.params.id;
     
@@ -123,32 +151,29 @@ app.delete('/products/:id', (req, res) => {
 });
 
 
-// Hund Handtering
+// Kund Handtering
 app.get('/customers', (req, res) => {
-    try {
-        const customers = db.getAllCustomers();
-        res.json(customers);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+    const customers = db.getAllCustomers();
+    if (customers.length === 0) {
+        return res.status(404).json({ error: 'No customers found' });
     }
-    
-})
 
-
-app.put('/customers/:id', (req, res) => {
-    const customerId = req.params.id;
-    const {  email, phone, address } = req.body;
-    
-    try {
-        db.updateCustomers(customerId, email, phone, address);
-        res.json({ message: 'Customer updated' });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    res.json(customers);
 });
 
 
+// update customer
+app.put('/customers/:id', (req, res) => {
+    const customerId = req.params.id;
+    const { email, phone, address } = req.body;
+    
+    db.updateCustomers(customerId, email, phone, address);
+    
+    res.json({ message: 'Customer updated' });
+});
 
+
+// Lista alla ordrar för en specifik kund
 app.get('/customers/:id/orders', (req, res) => {
     const customerId = req.params.id;
     console.log(customerId);
@@ -164,7 +189,7 @@ app.get('/customers/:id/orders', (req, res) => {
     }
 });
 
-
+//Visa statistik grupperad per kategori 
 app.get('/products/stats', (req, res) => {
     try {
         const stats = db.getProductStats();
@@ -181,7 +206,7 @@ app.get('/products/stats', (req, res) => {
     }
 });
 
-
+//Visa genomsnittligt betyg per produkt 
 app.get('/reviews/stats', (req, res) => {
     try {
         const stats = db.getreviewStats();
@@ -198,6 +223,10 @@ app.get('/reviews/stats', (req, res) => {
     }
 });
 
+
+
+
+app.use(errorHandler);
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

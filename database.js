@@ -1,10 +1,10 @@
 const dataBase  = require('better-sqlite3');
 
 const db = new dataBase('TechDB.db', {verbose: console.log});
+db.pragma('foreign_keys = ON');
 
 
-
-
+//Lista alla produkter
 function getAllProducts() {
     const sql = `
         SELECT 
@@ -44,29 +44,31 @@ function getProductById(productId) {
 }
 
 // get Product By name
-function getProductsByName(name) {
-    const sql = `
-    SELECT 
-        p.product_id, 
-        p.name AS product_name, 
-        p.description, 
-        p.price, 
-        p.stock_quantity,
-        m.name AS manufacturer_name,
-        c.name AS category_name
-    FROM products p
-    JOIN manufacturers m ON p.manufacturer_id = m.manufacturer_id
-    LEFT JOIN product_categories pc ON p.product_id = pc.product_id
-    LEFT JOIN categories c ON pc.category_id = c.category_id
-    WHERE p.name LIKE ?;
-    `;
+// function getProductsByName(name) {
+//     const sql = `
+//     SELECT 
+//         p.product_id, 
+//         p.name AS product_name, 
+//         p.description, 
+//         p.price, 
+//         p.stock_quantity,
+//         m.name AS manufacturer_name,
+//         c.name AS category_name
+//     FROM products p
+//     JOIN manufacturers m ON p.manufacturer_id = m.manufacturer_id
+//     LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+//     LEFT JOIN categories c ON pc.category_id = c.category_id
+//     WHERE p.name LIKE ?;
+//     `;
 
-    console.log("Executing SQL with name:", name);
-    const result = db.prepare(sql).all(`%${name}%`);
-    console.log("SQL result:", result);
-    return result;
-}
+//     console.log("Executing SQL with name:", name);
+//     const result = db.prepare(sql).all(`%${name}%`);
+//     console.log("SQL result:", result);
+//     return result;
+// }
 
+
+//// Hämta en products by category
 function getProductsByCategory(categoryId) {
     const stmt = db.prepare(`
         SELECT p.*, c.name AS category_name 
@@ -79,6 +81,7 @@ function getProductsByCategory(categoryId) {
 }
 
 
+//lägga till produkt
 function createProduct(name, description, price, stock_quantity, manufacturer_id) {
     const stmt = db.prepare(`
         INSERT INTO products (name, description, price, stock_quantity, manufacturer_id) 
@@ -89,6 +92,7 @@ function createProduct(name, description, price, stock_quantity, manufacturer_id
 }
 
 
+// updatera produkt
 function updateProduct(productId, name, description, price, stock_quantity, manufacturer_id) {
     const stmt = db.prepare(`
         UPDATE products 
@@ -98,6 +102,7 @@ function updateProduct(productId, name, description, price, stock_quantity, manu
     return stmt.run(name, description, price, stock_quantity, manufacturer_id, productId);
 }
 
+// ta bort produkt
 function deleteProduct(productId) {
     const stmt = db.prepare(`
         DELETE FROM products 
@@ -120,7 +125,6 @@ function getAllCustomers() {
 
 
 // Updatera Kund Information
-
 function updateCustomers(customer_id, email, phone, address) {
     const stmt =db.prepare(`
         UPDATE customers
@@ -129,6 +133,9 @@ function updateCustomers(customer_id, email, phone, address) {
     `);
     return stmt.run( email, phone, address, customer_id);
 }
+
+
+
 
 // Lista alla ordrar för en specifik kund 
 function getOrdersByCustomerId(customerId) {
@@ -162,7 +169,7 @@ function getProductStats() {
     return results;
 }
 
-
+//Visa genomsnittligt betyg per produkt 
 function getreviewStats() {
     const stmt = db.prepare(`
         SELECT 
@@ -174,4 +181,49 @@ function getreviewStats() {
     `);
     return stmt.all();
 }
-module.exports = {getAllCustomers, getAllProducts, getProductById, getProductsByName, getProductsByCategory, createProduct, updateProduct, deleteProduct, updateCustomers, getOrdersByCustomerId, getProductStats, getreviewStats};
+
+
+
+function filterProducts({ name, category, minPrice, maxPrice }) {
+    let sql = `
+    SELECT 
+        p.product_id, 
+        p.name AS product_name, 
+        p.description, 
+        p.price, 
+        p.stock_quantity,
+        c.name AS category_name
+    FROM products p
+    LEFT JOIN product_categories pc ON p.product_id = pc.product_id
+    LEFT JOIN categories c ON pc.category_id = c.category_id
+    WHERE 1=1`;
+    
+    let params = [];
+
+    if (name) {
+        sql += ` AND p.name LIKE ?`;
+        params.push(`%${name}%`);
+    }
+    if (category) {
+        sql += ` AND c.name = ?`;
+        params.push(category);
+    }
+    if (minPrice) {
+        sql += ` AND p.price >= ?`;
+        params.push(parseFloat(minPrice));
+    }
+    if (maxPrice) {
+        sql += ` AND p.price <= ?`;
+        params.push(parseFloat(maxPrice));
+    }
+
+    console.log("Executing SQL:", sql);
+    console.log("With parameters:", params);
+
+    const stmt = db.prepare(sql);
+    return stmt.all(...params);
+}
+
+// implementera CASCADE DELETE mellan products och reviews 
+
+module.exports = {filterProducts , getAllCustomers, getAllProducts, getProductById,  getProductsByCategory, createProduct, updateProduct, deleteProduct, updateCustomers, getOrdersByCustomerId, getProductStats, getreviewStats};
